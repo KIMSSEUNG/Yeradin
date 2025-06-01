@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.repository.ShortformRepository">
+
+    <!-- INSERT: pk는 auto_increment -->
+    <insert id="insertVideo" parameterType="com.ssafy.dto.shortform.ShortformDto" useGeneratedKeys="true" keyProperty="pk">
+        INSERT INTO shortform (title, author, content, date, videofile, favorite_count) <!-- favorite_count는 기본 0 -->
+        VALUES (#{title}, #{author}, #{content}, now(), #{videofile}, 0)
+    </insert>
+
+    <!-- SELECT all -->
+    <select id="selectAllVideo" resultType="com.ssafy.dto.shortform.ShortformDto">
+        SELECT * FROM shortform ORDER BY date DESC
+    </select>
+
+    <!-- SELECT one by pk -->
+    <select id="selectVideo" resultType="com.ssafy.dto.shortform.ShortformDto" parameterType="int">
+        SELECT * FROM shortform WHERE pk = #{pk}
+    </select>
+
+    <!-- UPDATE by pk -->
+    <update id="updateVideo" parameterType="com.ssafy.dto.shortform.ShortformDto">
+        UPDATE shortform
+        SET title = #{title},
+            content = #{content},
+            videofile = #{videofile}
+        WHERE pk = #{pk}
+    </update>
+
+    <!-- DELETE by pk -->
+    <delete id="deleteVideo" parameterType="int">
+        DELETE FROM shortform WHERE pk = #{pk}
+    </delete>
+    
+    <update id="incrementViewCount" parameterType="int">
+        UPDATE shortform
+        SET views = views + 1
+        WHERE pk = #{pk}
+    </update>
+    
+    <!-- 좋아요 관련 쿼리 -->
+    <select id="isFavorite" resultType="int">
+        SELECT COUNT(*) FROM member_favorite_shortform
+        WHERE member_id = #{memberId} AND shortform_pk = #{shortformPk}
+    </select>
+
+    <insert id="addFavorite">
+        INSERT INTO member_favorite_shortform (member_id, shortform_pk, favorited_at)
+        VALUES (#{memberId}, #{shortformPk}, NOW())
+    </insert>
+
+    <delete id="removeFavorite">
+        DELETE FROM member_favorite_shortform
+        WHERE member_id = #{memberId} AND shortform_pk = #{shortformPk}
+    </delete>
+
+    <update id="incrementFavoriteCount" parameterType="int">
+        UPDATE shortform SET favorite_count = favorite_count + 1 WHERE pk = #{pk}
+    </update>
+
+    <update id="decrementFavoriteCount" parameterType="int">
+        UPDATE shortform SET favorite_count = GREATEST(0, favorite_count - 1) WHERE pk = #{pk} <!-- 0 미만으로 내려가지 않도록 -->
+    </update>
+
+    <select id="getFavoriteCount" resultType="java.lang.Integer" parameterType="int">
+        SELECT favorite_count FROM shortform WHERE pk = #{pk}
+    </select>
+
+</mapper>

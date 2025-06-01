@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.repository.MemberRepository">
+
+    <!-- INSERT (pk는 auto_increment, 객체에 자동 반영) -->
+    <insert id="insertMember" parameterType="com.ssafy.dto.MemberDto" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO member (name, email, pw, provider, role, created_at)
+        VALUES (#{name}, #{email}, #{pw}, #{provider}, #{role}, CURRENT_TIMESTAMP)
+    </insert>
+
+    <!-- SELECT one -->
+    <select id="selectMember" resultType="com.ssafy.dto.MemberDto">
+        SELECT * FROM member WHERE email = #{email}
+    </select>
+
+    <!-- SELECT all -->
+    <select id="selectAllMember" resultType="com.ssafy.dto.MemberDto">
+        SELECT * FROM member
+    </select>
+
+    <!-- UPDATE -->
+    <update id="updateMember" parameterType="com.ssafy.dto.MemberDto">
+        UPDATE member
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <!-- email은 고유값이므로 보통 수정하지 않거나, 신중하게 처리 -->
+            <if test="pw != null and pw != ''">pw = #{pw},</if> <!-- 서비스에서 null 처리했으면 이 조건은 항상 참 -->
+            <!-- 다른 필드 업데이트가 필요하다면 추가 -->
+        </set>
+        WHERE email = #{email} AND provider = 'LOCAL' <!-- 일반 로컬 사용자만 수정 -->
+    </update>
+
+    <!-- DELETE -->
+    <delete id="deleteMember" >
+        DELETE FROM member WHERE email = #{email} AND provider = 'LOCAL' <!-- 일반 로컬 사용자만 삭제 -->
+    </delete>
+    
+    <select id="findByEmail" parameterType="string" resultType="com.ssafy.dto.MemberDto">
+        SELECT id, email, name, provider, provider_id, role
+        FROM member
+        WHERE email = #{email}
+    </select>
+    
+    <!-- OAuth SQL -->
+    <insert id="insertOAuth2Member" parameterType="com.ssafy.dto.OAuth2MemberDto" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO member (name, email, provider, provider_id, role)
+        VALUES (#{name}, #{email}, #{provider}, #{provider_id}, 'ROLE_USER')
+    </insert>
+
+    <!-- OAuth 사용자 조회 (email과 provider로) -->
+    <select id="selectOAuth2MemberByEmailAndProvider" resultType="com.ssafy.dto.OAuth2MemberDto">
+        SELECT id, name, email, provider, provider_id, role, created_at 
+        FROM member WHERE email = #{email} AND provider = #{provider}
+    </select>
+    
+    <!-- OAuth 사용자 조회 (provider와 provider_id로) -->
+    <select id="selectOAuth2MemberByProviderId" resultType="com.ssafy.dto.OAuth2MemberDto">
+        SELECT id, name, email, provider, provider_id, role, created_at 
+        FROM member WHERE provider = #{provider} AND provider_id = #{provider_id}
+    </select>
+
+    <!-- OAuth 사용자 정보 수정 (주로 이름 변경 등) -->
+    <update id="updateOAuth2Member" parameterType="com.ssafy.dto.OAuth2MemberDto">
+        UPDATE member
+        SET name = #{name}
+        WHERE email = #{email} AND provider = #{provider}
+    </update>
+    
+    <!-- 기존 사용자의 provider 정보 업데이트 (예: LOCAL -> GOOGLE) -->
+    <update id="updateOAuth2MemberProvider" parameterType="com.ssafy.dto.OAuth2MemberDto">
+        UPDATE member
+        SET provider = #{provider},
+            provider_id = #{provider_id},
+            name = #{name} <!-- 필요시 이름도 업데이트 -->
+        WHERE email = #{email} <!-- email 기준으로 찾아서 provider 정보 업데이트 -->
+    </update>
+
+    <!-- OAuth 사용자 삭제 (provider와 provider_id로) -->
+    <delete id="deleteOAuth2Member" >
+        DELETE FROM member WHERE provider = #{provider} AND provider_id = #{provider_id}
+    </delete>
+</mapper>

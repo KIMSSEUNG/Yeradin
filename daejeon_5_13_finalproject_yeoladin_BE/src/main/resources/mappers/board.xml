@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.ssafy.repository.BoardRepository" > 
+
+	
+	<select id="findByBoards" parameterType="map">
+	    SELECT 
+	        b.id,
+	        title,
+	        content_priview,
+	        member_id,
+	        m.name As author,
+	        img_forder_path,
+	        thumbnail_url,
+	        b.created_time
+	    FROM board b
+	    join member m on b.member_id = m.id
+	    ORDER By created_time DESC
+        LIMIT #{size}
+    	OFFSET #{offset}
+	</select>
+	
+	<select id="search">
+	  SELECT * FROM (
+	    SELECT 
+	      b.id, title, content_priview, member_id, m.name As author, img_forder_path, thumbnail_url, b.created_time
+	    FROM board b
+	    join member m on b.member_id = m.id
+	    WHERE
+	      <choose>
+	        <when test="category == '작성자' and keyword != null and keyword != ''">
+	          m.name LIKE CONCAT('%', #{keyword}, '%')
+	        </when>
+	        <when test="category == '제목' and keyword != null and keyword != ''">
+	          title LIKE CONCAT('%', #{keyword}, '%')
+	        </when>
+	        <otherwise>
+	          1 = 1  <!-- 🔄 keyword가 비어있을 경우 전체 반환 -->
+	        </otherwise>
+	      </choose>
+	    ORDER BY created_time DESC
+	    LIMIT #{size}
+	    OFFSET #{offset}
+	  ) AS search_result
+	</select>
+	
+	<select id="countBoards">
+    	SELECT COUNT(*) FROM board
+	</select>
+	
+	<select id="countFilter" resultType="int">
+	  SELECT COUNT(*) 
+	  FROM board b
+	  join member m on b.member_id = m.id
+	  <where>
+	    <choose>
+	      <when test="category == '작성자' and keyword != null and keyword != ''">
+	        m.name LIKE CONCAT('%', #{keyword}, '%')
+	      </when>
+	      <when test="category == '제목' and keyword != null and keyword != ''">
+	        title LIKE CONCAT('%', #{keyword}, '%')
+	      </when>
+	      <otherwise>
+	        1 = 1  <!-- 전체 -->
+	      </otherwise>
+	    </choose>
+	  </where>
+	</select>
+
+    <insert id="save" parameterType="com.ssafy.dto.board.BoardRegistDto">
+	  INSERT INTO board
+	  <trim prefix="(" suffix=")" suffixOverrides=",">
+	    id,
+	    title,
+	    content,
+	    member_id,
+	    <if test="imgForderPath != null">
+	      img_forder_path,
+	    </if>
+	    <if test="thumbnailUrl != null">
+	      thumbnail_url,
+	    </if>
+	     <if test="contentPriview != null">
+	      content_priview,
+	    </if>
+	  </trim>
+	  VALUES
+	  <trim prefix="(" suffix=")" suffixOverrides=",">
+	    #{id},
+	    #{title},
+	    #{content},
+	    #{memberId},
+	    <if test="imgForderPath != null">
+	      #{imgForderPath},
+	    </if>
+	    <if test="thumbnailUrl != null">
+	      #{thumbnailUrl},
+	    </if>
+	    <if test="contentPriview != null">
+	      #{contentPriview},
+	    </if>
+	  </trim>
+	</insert>
+	
+	<insert id="imageSave" parameterType="java.util.List">
+	  INSERT INTO images (original_name, stored_name, board_id)
+	  VALUES
+	  <foreach collection="list" item="img" separator=",">
+	    (#{img.originalName}, #{img.storeName}, #{img.boardId})
+	  </foreach>
+	</insert>
+	
+	<select id="findDetail">
+	    SELECT 
+	        b.id,
+	        title,
+	        content,
+	        m.name As author,
+	        img_forder_path,
+	        content_priview,
+	        b.created_time
+	    FROM board b
+	    join member m on b.member_id = m.id
+	    WHERE b.id = #{id}
+	</select>
+    
+    <select id="findByForderPath">
+    	SELECT img_forder_path FROM board
+    	WHERE id = #{id};
+    </select>
+    
+    
+    <delete id="delete">
+	    DELETE FROM board
+	    WHERE id = #{id}
+	</delete>
+   
+   	<insert id="contentSave">
+	  INSERT INTO comment (member_id, board_id, content)
+	  VALUES (#{memberId}, #{boardId}, #{content})
+	</insert>
+   
+   <select id="findByBoardComments">
+	  SELECT
+	    c.id,
+	    c.member_id AS memberId,
+	    c.board_id AS boardId,
+	    m.name AS author,
+	    c.content,
+	    c.created_time AS createdTime
+	  FROM board b
+	  JOIN comment c ON b.id = c.board_id
+	  JOIN member m ON c.member_id = m.id
+	  WHERE b.id = #{boardId}
+	</select>
+   
+   <delete id="deleteComment">
+	    DELETE FROM comment
+	    WHERE id = #{id}
+	</delete>
+   
+
+</mapper>
+
+

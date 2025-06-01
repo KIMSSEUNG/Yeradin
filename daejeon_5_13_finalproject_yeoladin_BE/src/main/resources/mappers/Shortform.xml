@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.repository.ShortformRepository">
+
+    <!-- INSERT: pk는 auto_increment -->
+    <insert id="insertVideo" parameterType="com.ssafy.dto.shortform.ShortformDto" useGeneratedKeys="true" keyProperty="pk">
+        INSERT INTO shortform (title, author, content, date, videofile, favorite_count) <!-- favorite_count는 기본 0 -->
+        VALUES (#{title}, #{author}, #{content}, CURRENT_TIMESTAMP, #{videofile}, 0)
+    </insert>
+
+    <!-- SELECT all -->
+    <select id="selectAllVideo" resultType="com.ssafy.dto.shortform.ShortformDto">
+        SELECT * FROM shortform ORDER BY date DESC
+    </select>
+
+    <!-- SELECT one by pk -->
+    <select id="selectVideo" resultType="com.ssafy.dto.shortform.ShortformDto" parameterType="int">
+        SELECT * FROM shortform WHERE pk = #{pk}
+    </select>
+
+    <!-- UPDATE by pk -->
+    <update id="updateVideo" parameterType="com.ssafy.dto.shortform.ShortformDto">
+        UPDATE shortform
+        SET title = #{title},
+            content = #{content},
+            videofile = #{videofile}
+        WHERE pk = #{pk}
+    </update>
+
+    <!-- DELETE by pk -->
+    <delete id="deleteVideo" parameterType="int">
+        DELETE FROM shortform WHERE pk = #{pk}
+    </delete>
+    
+    <update id="incrementViewCount" parameterType="int">
+        UPDATE shortform
+        SET views = views + 1
+        WHERE pk = #{pk}
+    </update>
+    
+    <delete id="deleteShortformContentTypeMappings" parameterType="int">
+        DELETE FROM shortform_to_contenttype
+        WHERE shortform_pk = #{shortformPk}
+    </delete>
+    
+    <!-- ⭐ 추가: 조회수 순으로 상위 N개 숏폼 조회 -->
+    <select id="findPopularShortforms" resultType="com.ssafy.dto.shortform.ShortformDto" parameterType="int">
+        SELECT pk, title, author, content, views, favorite_count AS favoriteCount, date, videofile
+        FROM shortform
+        ORDER BY views DESC
+        LIMIT #{limit}
+    </select>
+    
+    <!-- ⭐ 추가: 콘텐츠 타입 목록 조회 -->
+    <select id="findAllContentTypes" resultType="com.ssafy.dto.contenttype.ContentTypeDto">
+        SELECT content_type_id AS contentTypeId, content_type_name AS contentTypeName
+        FROM contenttypes
+        ORDER BY content_type_name
+    </select>
+
+    <!-- ⭐ 추가: shortform_to_contenttype 테이블에 매핑 정보 삽입 -->
+    <insert id="insertShortformContentType">
+        INSERT INTO shortform_to_contenttype (shortform_pk, content_type_id)
+        VALUES (#{shortformPk}, #{contentTypeId})
+    </insert>
+
+    <!-- ⭐ 추가: 특정 숏폼과 연결된 콘텐츠 타입 이름 목록 조회 -->
+    <select id="findContentTypeNamesByShortformPk" resultType="string" parameterType="int">
+        SELECT ct.content_type_name
+        FROM shortform_to_contenttype stc
+        JOIN contenttypes ct ON stc.content_type_id = ct.content_type_id
+        WHERE stc.shortform_pk = #{pk}
+        ORDER BY ct.content_type_name
+    </select>
+
+     <!-- ⭐ 추가: 모든 숏폼-콘텐츠타입 매핑 정보 조회 -->
+    <select id="findAllShortformContentTypeMappings" resultType="com.ssafy.dto.shortform.ShortformContentTypeMappingDto">
+        SELECT stc.shortform_pk AS shortformPk, ct.content_type_id AS contentTypeId, ct.content_type_name AS contentTypeName
+        FROM shortform_to_contenttype stc
+        JOIN contenttypes ct ON stc.content_type_id = ct.content_type_id
+        ORDER BY stc.shortform_pk, ct.content_type_name
+    </select>
+    
+    <!-- ⭐ 추가: 특정 콘텐츠 타입 이름으로 숏폼 목록 조회 -->
+    <select id="findVideosByContentTypeName" resultType="com.ssafy.dto.shortform.ShortformDto">
+        SELECT s.pk, s.title, s.author, s.content, s.views, s.favorite_count, s.date, s.videofile
+        FROM shortform s
+        JOIN shortform_to_contenttype stc ON s.pk = stc.shortform_pk
+        JOIN contenttypes ct ON stc.content_type_id = ct.content_type_id
+        WHERE ct.content_type_name = #{contentTypeName}
+        ORDER BY s.date DESC -- 최신 영상 먼저
+    </select>
+
+    <!-- ⭐ 추가: 특정 숏폼 PK 목록에 대한 콘텐츠 타입 매핑 정보 조회 -->
+    <select id="findShortformContentTypeMappingsByPks" resultType="com.ssafy.dto.shortform.ShortformContentTypeMappingDto">
+        SELECT stc.shortform_pk AS shortformPk, ct.content_type_id AS contentTypeId, ct.content_type_name AS contentTypeName
+        FROM shortform_to_contenttype stc
+        JOIN contenttypes ct ON stc.content_type_id = ct.content_type_id
+        <where>
+            stc.shortform_pk IN
+            <foreach collection="pks" item="pk" open="(" close=")" separator=",">
+                #{pk}
+            </foreach>
+        </where>
+        ORDER BY stc.shortform_pk, ct.content_type_name
+    </select>
+
+    <!-- ⭐ 추가: 특정 멤버가 특정 숏폼 PK 목록 중 좋아요 누른 숏폼 PK 목록 조회 -->
+    <select id="findFavoritedShortformPksByMember" resultType="java.lang.Integer">
+        SELECT shortform_pk
+        FROM member_favorite_shortform
+        <where>
+            member_id = #{memberId}
+            AND shortform_pk IN
+            <foreach collection="shortformPks" item="pk" open="(" close=")" separator=",">
+                #{pk}
+            </foreach>
+        </where>
+    </select>
+    
+    <!-- 좋아요 관련 쿼리 -->
+    <select id="isFavorite" resultType="int">
+        SELECT COUNT(*) FROM member_favorite_shortform
+        WHERE member_id = #{memberId} AND shortform_pk = #{shortformPk}
+    </select>
+
+    <insert id="addFavorite">
+        INSERT INTO member_favorite_shortform (member_id, shortform_pk, favorited_at)
+        VALUES (#{memberId}, #{shortformPk}, NOW())
+    </insert>
+
+    <delete id="removeFavorite">
+        DELETE FROM member_favorite_shortform
+        WHERE member_id = #{memberId} AND shortform_pk = #{shortformPk}
+    </delete>
+
+    <update id="incrementFavoriteCount" parameterType="int">
+        UPDATE shortform SET favorite_count = favorite_count + 1 WHERE pk = #{pk}
+    </update>
+
+    <update id="decrementFavoriteCount" parameterType="int">
+        UPDATE shortform SET favorite_count = GREATEST(0, favorite_count - 1) WHERE pk = #{pk} <!-- 0 미만으로 내려가지 않도록 -->
+    </update>
+
+    <select id="getFavoriteCount" resultType="java.lang.Integer" parameterType="int">
+        SELECT favorite_count FROM shortform WHERE pk = #{pk}
+    </select>
+
+</mapper>

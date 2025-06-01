@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.repository.RefreshTokenRepository">
+
+    <!-- DTO와 DB 컬럼명 매핑 (필요시 사용, 여기서는 컬럼명과 필드명이 유사하여 생략 가능) -->
+    <resultMap id="refreshTokenResultMap" type="com.ssafy.dto.RefreshTokenDto">
+        <id property="id" column="id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="tokenValue" column="token_value"/>
+        <result property="issuedAt" column="issued_at"/>
+        <result property="expiresAt" column="expires_at"/>
+    </resultMap>
+
+    <select id="findByTokenValue" parameterType="String" resultMap="refreshTokenResultMap">
+        SELECT id, member_id, token_value, issued_at, expires_at
+        FROM refresh_token
+        WHERE token_value = #{tokenValue}
+    </select>
+
+    <select id="findByMemberId" parameterType="Long" resultMap="refreshTokenResultMap">
+        SELECT id, member_id, token_value, issued_at, expires_at
+        FROM refresh_token
+        WHERE member_id = #{memberId}
+    </select>
+
+    <insert id="save" parameterType="com.ssafy.dto.RefreshTokenDto" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO refresh_token (member_id, token_value, issued_at, expires_at)
+        VALUES (#{memberId}, #{tokenValue}, #{issuedAt}, #{expiresAt})
+    </insert>
+
+    <update id="update" parameterType="com.ssafy.dto.RefreshTokenDto">
+        UPDATE refresh_token
+        SET token_value = #{tokenValue},
+            issued_at = #{issuedAt},
+            expires_at = #{expiresAt}
+        WHERE member_id = #{memberId} <!-- 또는 id = #{id} -->
+    </update>
+
+    <delete id="deleteByMemberId" parameterType="Long">
+        DELETE FROM refresh_token WHERE member_id = #{memberId}
+    </delete>
+
+    <delete id="deleteByTokenValue" parameterType="String">
+        DELETE FROM refresh_token WHERE token_value = #{tokenValue}
+    </delete>
+
+    <!-- 만료된 토큰 삭제 (선택 사항) -->
+    <!--
+    <delete id="deleteExpiredTokens">
+        DELETE FROM refresh_token WHERE expires_at < NOW()
+    </delete>
+    -->
+
+</mapper>

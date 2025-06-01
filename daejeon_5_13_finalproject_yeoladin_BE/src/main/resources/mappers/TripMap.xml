@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.ssafy.repository.TripMapRepository"> 
+
+    <select id="getContentData">
+    	select sido_name from sidos;
+    </select>
+    
+    <select id="gugunFind">
+    	select a.sido_name, b.gugun_name from sidos a 
+    	join guguns b Using(sido_code);
+    </select>
+    
+    <select id="findByContents">
+    	select content_type_name from contenttypes
+    </select>
+    
+	<select id="getSidoAndGugun">
+	  SELECT s.sido_name AS sido, g.gugun_name AS gugun 
+	  FROM sidos s 
+	  JOIN guguns g USING(sido_code)
+	</select>
+	
+	<select id="searchAttractions" parameterType="map">
+	    SELECT s.latitude, s.longitude, s.title , s.first_image1 as image
+	    FROM attractions s 
+	    JOIN contenttypes g USING(content_type_id) 
+	    WHERE g.content_type_id = #{contentTypeId} 
+        AND s.area_code = #{sidoCode} 
+	    AND s.si_gun_gu_code = #{gugunCode}
+	    AND s.latitude BETWEEN 37 AND 40
+	    AND s.longitude BETWEEN 126 AND 129
+	</select>
+	
+	<select id="findGugunCode" parameterType="map">
+	  SELECT b.gugun_code 
+	  FROM sidos a 
+	  JOIN guguns b USING(sido_code) 
+	  WHERE b.gugun_name = #{gugunName} 
+	  AND a.sido_code = #{sidoCode}
+	</select>
+	
+	<select id="getContentDetail" resultMap="ContentDetailMap">
+	  SELECT first_image1,addr1,homepage,overview
+	  FROM attractions
+	  WHERE title = #{title} 
+	</select>
+	
+  	<resultMap id="ContentDetailMap" type="com.ssafy.dto.trip.ContentDetailDto">
+	   <result column="addr1"        property="address"/>
+	   <result column="homepage"     property="hompage"/>
+	   <result column="overview"     property="overview"/>
+	   <result column="first_image1" property="imaUrl"/>
+	 </resultMap>
+</mapper>
