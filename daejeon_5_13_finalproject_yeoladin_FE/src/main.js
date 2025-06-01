@@ -16,7 +16,7 @@ import MainIndex from './MainIndex.vue'
 const pinia = createPinia()
 pinia.use(piniaPluginPersistedstate) // ✅ 플러그인 등록
 
-useKakao('5a7c5715a825f7a1cde2a7a8a29d8e5f')
+useKakao(import.meta.env.VITE_KAKAO_JS_API_KEY);
 pinia.use(piniaPluginPersistedstate)
 const mainIndex = createApp(MainIndex)
 mainIndex.use(pinia)
