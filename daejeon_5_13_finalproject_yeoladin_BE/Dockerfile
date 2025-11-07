@@ -13,7 +13,6 @@ RUN --mount=type=cache,target=/root/.m2 \
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -DskipTests package
-
 # 산출물 하나로 고정 (original 제외)
 RUN set -eux; \
     JAR="$(ls target/*.jar | grep -v 'original' | head -n1)"; \

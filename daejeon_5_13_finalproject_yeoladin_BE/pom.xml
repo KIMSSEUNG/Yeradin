@@ -21,6 +21,16 @@
         <java.version>17</java.version>
         <spring-ai.version>1.0.0</spring-ai.version>
     </properties>
+    <repositories>
+        <repository>
+            <id>spring-milestone</id>
+            <url>https://repo.spring.io/milestone</url>
+        </repository>
+        <repository>
+            <id>spring-snapshot</id>
+            <url>https://repo.spring.io/snapshot</url>
+        </repository>
+    </repositories>
 
     <!-- NOTE: 환경에 따라 BOM이 go-offline 단계에서 안 먹을 수 있어
          아래 dependencies에는 '직접 버전 명시'로 처리합니다. -->
