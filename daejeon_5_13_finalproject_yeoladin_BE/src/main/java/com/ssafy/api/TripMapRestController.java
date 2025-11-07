@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ssafy.ai.ChatGptUtil;
+//import com.ssafy.ai.ChatGptUtil;
 import com.ssafy.dto.trip.ContentDetailDto;
 import com.ssafy.dto.trip.ContentSearchDto;
 import com.ssafy.dto.trip.TravelPlan;
@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class TripMapRestController {
 	
 	private final TripMapService service;
-	private final ChatGptUtil gptUtil;
+//	private final ChatGptUtil gptUtil;
 	
 	@GetMapping("/content")
 	public TripContentDto registTripContent() throws Exception {
@@ -47,11 +47,11 @@ public class TripMapRestController {
 		return service.contentDetail(title);
 	}
 	
-	@GetMapping("/ai")
-	public List<TravelPlan> aiRecommendRoute(@RequestParam String region) throws Exception {
-		List<TravelPlan> plan = gptUtil.recommendRoute(region);
-		System.out.println(plan.toString());
-		return plan;
-	}
+//	@GetMapping("/ai")
+//	public List<TravelPlan> aiRecommendRoute(@RequestParam String region) throws Exception {
+//		List<TravelPlan> plan = gptUtil.recommendRoute(region);
+//		System.out.println(plan.toString());
+//		return plan;
+//	}
 	
 }
