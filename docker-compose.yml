@@ -59,6 +59,11 @@ services:
     build:
       context: ./daejeon_5_13_finalproject_yeoladin_FE
       dockerfile: Dockerfile
+      args:
+        VITE_KAKAO_REST_API_KEY: ${VITE_KAKAO_REST_API_KEY}
+        VITE_KAKAO_JS_API_KEY: ${VITE_KAKAO_JS_API_KEY}
+        VITE_APP_DEVELOP_FRONT_URL: ${VITE_APP_DEVELOP_FRONT_URL}
+        VITE_APP_DEVELOP_BACKEND_URL: ${VITE_APP_DEVELOP_BACKEND_URL}
     container_name: nginx
     restart: unless-stopped
     depends_on:
