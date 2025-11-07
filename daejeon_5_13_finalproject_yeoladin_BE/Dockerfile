@@ -23,7 +23,8 @@ ENV TZ=Asia/Seoul \
     JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75"
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /app/data/images /app/data/videos/yeoladin
 
 COPY --from=builder /app/app.jar /app/app.jar
 EXPOSE 8080

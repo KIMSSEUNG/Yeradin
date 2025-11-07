@@ -43,12 +43,17 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       GOOGLE_CLIENT_SCOPE: ${GOOGLE_CLIENT_SCOPE}
+      UPLOAD_IMAGE_DIR: ${UPLOAD_IMAGE_DIR}
+      UPLOAD_VIDEO_DIR: ${UPLOAD_VIDEO_DIR}
     depends_on:
       mysql:
         condition: service_healthy
     expose:
       - "8080"
     networks: [backend]
+    volumes:
+      - images:/app/data/images
+      - videos:/app/data/videos/yeoladin
 
   nginx:
     build:
@@ -68,3 +73,5 @@ networks:
 
 volumes:
   mysql_data:
+  images:
+  videos:
