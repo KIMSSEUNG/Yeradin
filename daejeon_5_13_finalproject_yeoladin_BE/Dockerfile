@@ -1,24 +1,24 @@
 # ===== build stage =====
-FROM maven:3.9-eclipse-temurin-21 AS builder
+FROM maven:3.9-eclipse-temurin-17 AS builder
 WORKDIR /app
 
-# Maven 캐시 최적화
+# 의존성 캐시 선 확보 (플러그인 포함)
 COPY pom.xml .
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B dependency:resolve
+    mvn -B -U -DskipTests dependency:go-offline
 
-# 소스 복사 후 빌드
+# 소스 복사 후 패키징
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B -DskipTests package
+    mvn -B -DskipTests clean package
 
-# 결과물 단일 jar로 복사
+# 결과물 복사
 RUN set -eux; \
     JAR="$(ls target/*.jar | grep -v 'original' | head -n1)"; \
     cp "$JAR" /app/app.jar
 
 # ===== run stage =====
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:17-jre
 ENV TZ=Asia/Seoul \
     JAVA_OPTS="-XX:+UseG1GC -XX:MaxRAMPercentage=75"
 WORKDIR /app
